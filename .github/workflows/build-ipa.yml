@@ -3,7 +3,7 @@ name: Build iOS App (Strofy)
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # هذا السطر يسمح لك بتشغيل البناء يدوياً من زر Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -20,7 +20,6 @@ jobs:
 
     - name: Build IPA
       run: |
-        # بناء التطبيق بدون توقيع لكي تتمكن من تثبيته لاحقاً
         xcodebuild clean build \
           -project Strofy.xcodeproj \
           -scheme Strofy \
@@ -31,16 +30,14 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           CONFIGURATION_BUILD_DIR=$(PWD)/build
           
-        # نسخ فيديو البداية يدوياً إلى داخل حزمة التطبيق لضمان عمله
         cp Strofy/video.mov build/Strofy.app/
         
-        # تجهيز مجلد Payload وضغط التطبيق بصيغة ipa
         mkdir -p Payload
         cp -r build/Strofy.app Payload/
         zip -qr Strofy.ipa Payload
         
     - name: Upload IPA Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Strofy-IPA
         path: Strofy.ipa
