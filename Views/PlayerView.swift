@@ -3,30 +3,36 @@ import AVKit
 
 struct PlayerView: View {
     let videoURL: URL
-    @State private var player: AVPlayer?
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            if let player = player {
-                VideoPlayer(player: player)
-                    .onAppear {
-                        player.play()
-                    }
-                    .onDisappear {
-                        player.pause()
-                    }
-            }
-        }
-        .onAppear {
-            self.player = AVPlayer(url: videoURL)
-            // إعدادات لدعم الـ PiP (صورة في صورة)
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-                try AVAudioSession.sharedInstance().setActive(true)
-            } catch {
-                print("Failed to setup audio session.")
-            }
-        }
+        CustomAVPlayerView(videoURL: videoURL, dismissAction: {
+            presentationMode.wrappedValue.dismiss()
+        })
+        .ignoresSafeArea()
+        .statusBarHidden(true)
     }
+}
+
+// بناء هيكل مخصص لربط AVPlayerViewController مع SwiftUI ودعم الشاشة الكاملة
+struct CustomAVPlayerView: UIViewControllerRepresentable {
+    let videoURL: URL
+    let dismissAction: () -> Void
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        let player = AVPlayer(url: videoURL)
+        controller.player = player
+        
+        // السماح بتشغيل الفيديو بملء الشاشة وتحكم كامل
+        controller.showsPlaybackControls = true
+        controller.videoGravity = .resizeAspect
+        
+        // بدء التشغيل تلقائياً
+        player.play()
+        
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 }
