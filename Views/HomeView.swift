@@ -4,18 +4,16 @@ struct HomeView: View {
     @StateObject var tmdbService = TMDBService()
     @State private var searchText = ""
     @State private var isSearching = false
-    @State private var selectedCategory = "Most Watched"
     
     var body: some View {
         NavigationView {
             ZStack {
-                // الخلفية بالثيم الأخضر الداكن الفاخر
                 Color(red: 0.05, green: 0.18, blue: 0.14)
                     .ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // الهيدر والبحث التفاعلي
+                    VStack(alignment: .leading, spacing: 24) {
+                        // الهيدر
                         HStack {
                             Image(systemName: "flame.fill")
                                 .font(.title)
@@ -26,7 +24,6 @@ struct HomeView: View {
                                 .foregroundColor(.white)
                             Spacer()
                             
-                            // زر البحث الذي يفتح خانة الإدخال
                             Button(action: {
                                 withAnimation(.spring()) {
                                     isSearching.toggle()
@@ -43,7 +40,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal)
                         
-                        // حقل البحث الفعال
+                        // حقل البحث
                         if isSearching {
                             HStack {
                                 Image(systemName: "magnifyingglass")
@@ -66,45 +63,30 @@ struct HomeView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                         }
                         
-                        // التصنيفات (متناسقة مع الثيم الأخضر)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                CategoryButton(title: "Most Watched", isSelected: selectedCategory == "Most Watched") {
-                                    selectedCategory = "Most Watched"
-                                    tmdbService.fetchTrending()
-                                }
-                                CategoryButton(title: "For Kids", isSelected: selectedCategory == "For Kids") {
-                                    selectedCategory = "For Kids"
-                                    tmdbService.fetchByGenre(genreId: 16) // أفلام أنيميشن/أطفال
-                                }
-                                CategoryButton(title: "Family", isSelected: selectedCategory == "Family") {
-                                    selectedCategory = "Family"
-                                    tmdbService.fetchByGenre(genreId: 10751) // عائلي
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        // قسم الأفلام
-                        Text(searchText.isEmpty ? "Movies" : "نتائج البحث")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                let displayedMovies = searchText.isEmpty ? tmdbService.movies : tmdbService.searchResults
-                                
-                                ForEach(displayedMovies) { movie in
-                                    NavigationLink(destination: MovieDetailView(movie: movie)) {
-                                        MovieCard(movie: movie)
-                                    }
+                        // لو في بحث فعّال، اعرض نتائج البحث بس
+                        if !searchText.isEmpty {
+                            MovieSectionRow(title: "نتائج البحث", movies: tmdbService.searchResults)
+                        } else {
+                            // الأقسام الثابتة
+                            MovieSectionRow(
+                                title: "أفلام",
+                                movies: tmdbService.movies.filter { $0.media_type == "movie" }
+                            )
+                            
+                            MovieSectionRow(
+                                title: "مسلسلات",
+                                movies: tmdbService.movies.filter { $0.media_type == "tv" }
+                            )
+                            
+                            // أقسام حسب التصنيف
+                            ForEach(tmdbService.genreSections, id: \.name) { genre in
+                                if let genreMovies = tmdbService.moviesByGenre[genre.name], !genreMovies.isEmpty {
+                                    MovieSectionRow(title: genre.name, movies: genreMovies)
                                 }
                             }
-                            .padding(.horizontal)
                         }
                         
-                        Spacer(minLength: 120) // مساحة للبار السفلي الزجاجي
+                        Spacer(minLength: 120)
                     }
                     .padding(.top)
                 }
@@ -112,30 +94,41 @@ struct HomeView: View {
             .navigationBarHidden(true)
         }
         .onAppear {
-            tmdbService.fetchTrending()
+            tmdbService.fetchAllSections()
         }
     }
 }
 
-struct CategoryButton: View {
+// قسم واحد (عنوان + سطر أفقي من الكروت)
+struct MovieSectionRow: View {
     let title: String
-    let isSelected: Bool
-    let action: () -> Void
+    let movies: [Movie]
     
     var body: some View {
-        Button(action: action) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(isSelected ? Color(red: 0.2, green: 0.85, blue: 0.5) : Color.white.opacity(0.1))
-                .foregroundColor(isSelected ? .black : .white)
-                .cornerRadius(20)
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(movies) { movie in
+                        NavigationLink(destination: MovieDetailView(movie: movie)) {
+                            MovieCard(movie: movie)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
         }
     }
 }
 
+// الكارد بنفس ستايل الصورة التانية
 struct MovieCard: View {
     let movie: Movie
+    
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             AsyncImage(url: URL(string: "https://image.tmdb.org/t/p/w500\(movie.poster_path ?? "")")) { image in
@@ -146,18 +139,32 @@ struct MovieCard: View {
             .frame(width: 160, height: 240)
             .cornerRadius(20)
             
-            VStack(alignment: .leading) {
-                Text(movie.title ?? movie.name ?? "بدون اسم")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(movie.displayTitle)
                     .font(.headline)
                     .foregroundColor(.white)
                     .lineLimit(1)
                 
-                HStack {
-                    Text(String(format: "%.1f", movie.vote_average))
-                        .font(.caption)
-                    Image(systemName: "star.fill").foregroundColor(.yellow).font(.caption)
+                HStack(spacing: 6) {
+                    if !movie.year.isEmpty {
+                        Text(movie.year)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.85))
+                    }
+                    
+                    HStack(spacing: 3) {
+                        Text("IMDb")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.black)
+                        Text(String(format: "%.1f", movie.vote_average))
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.black)
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Color.yellow)
+                    .cornerRadius(4)
                 }
-                .foregroundColor(.white)
             }
             .padding()
             .frame(width: 160, alignment: .leading)
