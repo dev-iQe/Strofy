@@ -11,7 +11,7 @@ struct MainTabView: View {
             
             TabView(selection: $selectedTab) {
                 HomeView().tag(0)
-                Text("المفضلة").tag(1) // شاشة المفضلة
+                ArchiveTestView().tag(1) // شاشة اختبار Archive.org
                 SettingsView().tag(2)
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never)) // لدعم السحب يميناً ويسارا
