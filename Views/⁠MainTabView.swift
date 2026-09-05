@@ -14,7 +14,7 @@ struct MainTabView: View {
                 Text("المفضلة").tag(1) // شاشة المفضلة
                 SettingsView().tag(2)
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never)) // لدعم السحب يميناً ويساراً
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never)) // لدعم السحب يميناً ويسارا
             .ignoresSafeArea()
             
             // شريط زجاجي سائل متناسق مع الثيم الأخضر
@@ -34,7 +34,7 @@ struct MainTabView: View {
                     .stroke(Color.white.opacity(0.15), lineWidth: 1) // إطار زجاجي خفيف
             )
             .padding(.horizontal, 40)
-            .padding(.bottom, 25)
+            .padding(.bottom, 8)
             .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 10)
         }
         .preferredColorScheme(.dark) // تثبيت الثيم الداكن والأخضر الخاص بتصميمك
