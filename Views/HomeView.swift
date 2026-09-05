@@ -149,11 +149,11 @@ struct MovieCard: View {
                     }
                     
                     HStack(spacing: 3) {
-                        Text("IMDb")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.black)
                         Text(String(format: "%.1f", movie.vote_average))
                             .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.black)
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 9))
                             .foregroundColor(.black)
                     }
                     .padding(.horizontal, 5)
