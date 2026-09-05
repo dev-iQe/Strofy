@@ -1,0 +1,12 @@
+name: Strofy
+options:
+  bundleIdPrefix: com.azawy
+targets:
+  Strofy:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Strofy
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
