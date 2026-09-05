@@ -36,7 +36,8 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           CONFIGURATION_BUILD_DIR=$(PWD)/build
           
-        cp Strofy/video.mov build/Strofy.app/
+        # نسخ الفيديو من المسار الصحيح في الجذر
+        cp video.mov build/Strofy.app/
         
         mkdir -p Payload
         cp -r build/Strofy.app Payload/
