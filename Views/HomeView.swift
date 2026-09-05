@@ -4,6 +4,7 @@ struct HomeView: View {
     @StateObject var tmdbService = TMDBService()
     @State private var searchText = ""
     @State private var isSearching = false
+    @State private var selectedCategory = "Most Watched"
     
     var body: some View {
         NavigationView {
@@ -29,7 +30,10 @@ struct HomeView: View {
                             Button(action: {
                                 withAnimation(.spring()) {
                                     isSearching.toggle()
-                                    if !isSearching { searchText = "" }
+                                    if !isSearching {
+                                        searchText = ""
+                                        tmdbService.searchResults = []
+                                    }
                                 }
                             }) {
                                 Image(systemName: isSearching ? "xmark.circle.fill" : "magnifyingglass")
@@ -47,6 +51,9 @@ struct HomeView: View {
                                 TextField("ابحث عن فيلم أو مسلسل...", text: $searchText)
                                     .foregroundColor(.white)
                                     .autocapitalization(.none)
+                                    .onChange(of: searchText) { newValue in
+                                        tmdbService.searchMovies(query: newValue)
+                                    }
                             }
                             .padding()
                             .background(.ultraThinMaterial)
@@ -62,14 +69,23 @@ struct HomeView: View {
                         // التصنيفات (متناسقة مع الثيم الأخضر)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                CategoryButton(title: "Most Watched", isSelected: true)
-                                CategoryButton(title: "For Kids", isSelected: false)
-                                CategoryButton(title: "Family", isSelected: false)
+                                CategoryButton(title: "Most Watched", isSelected: selectedCategory == "Most Watched") {
+                                    selectedCategory = "Most Watched"
+                                    tmdbService.fetchTrending()
+                                }
+                                CategoryButton(title: "For Kids", isSelected: selectedCategory == "For Kids") {
+                                    selectedCategory = "For Kids"
+                                    tmdbService.fetchByGenre(genreId: 16) // أفلام أنيميشن/أطفال
+                                }
+                                CategoryButton(title: "Family", isSelected: selectedCategory == "Family") {
+                                    selectedCategory = "Family"
+                                    tmdbService.fetchByGenre(genreId: 10751) // عائلي
+                                }
                             }
                             .padding(.horizontal)
                         }
                         
-                        // قسم الأفلام (مع تفعيل الفلترة والبحث الفوري)
+                        // قسم الأفلام
                         Text(searchText.isEmpty ? "Movies" : "نتائج البحث")
                             .font(.headline)
                             .foregroundColor(.white)
@@ -77,10 +93,9 @@ struct HomeView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                // فلترة الأفلام بناءً على ما يكتبه المستخدم في خانة البحث
-                                ForEach(tmdbService.movies.filter { movie in
-                                    searchText.isEmpty || (movie.title ?? movie.name ?? "").localizedStandardContains(searchText)
-                                }) { movie in
+                                let displayedMovies = searchText.isEmpty ? tmdbService.movies : tmdbService.searchResults
+                                
+                                ForEach(displayedMovies) { movie in
                                     NavigationLink(destination: MovieDetailView(movie: movie)) {
                                         MovieCard(movie: movie)
                                     }
@@ -105,14 +120,17 @@ struct HomeView: View {
 struct CategoryButton: View {
     let title: String
     let isSelected: Bool
+    let action: () -> Void
+    
     var body: some View {
-        Text(title)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-            // الثيم الأخضر المضيء للعنصر المحدد، وزجاجي لغير المحدد
-            .background(isSelected ? Color(red: 0.2, green: 0.85, blue: 0.5) : Color.white.opacity(0.1))
-            .foregroundColor(isSelected ? .black : .white)
-            .cornerRadius(20)
+        Button(action: action) {
+            Text(title)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(isSelected ? Color(red: 0.2, green: 0.85, blue: 0.5) : Color.white.opacity(0.1))
+                .foregroundColor(isSelected ? .black : .white)
+                .cornerRadius(20)
+        }
     }
 }
 
