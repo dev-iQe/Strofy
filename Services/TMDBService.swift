@@ -82,14 +82,48 @@ class TMDBService: ObservableObject {
             fetchByGenre(genreId: genre.id, name: genre.name)
         }
     }
+    
+    // دالة جديدة تم إضافتها لجلب رابط فيديو العرض الترويجي (Trailer) لتشغيله في PlayerView
+    func fetchMovieVideo(movieId: Int, completion: @escaping (URL?) -> Void) {
+        guard let url = URL(string: "\(baseURL)/movie/\(movieId)/videos?api_key=\(apiKey)") else {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data,
+                  let decoded = try? JSONDecoder().decode(VideoResponse.self, from: data) else {
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
+            
+            if let video = decoded.results.first(where: { $0.type == "Trailer" && $0.site == "YouTube" }) {
+                let youtubeURL = URL(string: "https://www.youtube.com/watch?v=\(video.key)")
+                DispatchQueue.main.async { completion(youtubeURL) }
+            } else if let firstVideo = decoded.results.first(where: { $0.site == "YouTube" }) {
+                let youtubeURL = URL(string: "https://www.youtube.com/watch?v=\(firstVideo.key)")
+                DispatchQueue.main.async { completion(youtubeURL) }
+            } else {
+                DispatchQueue.main.async { completion(nil) }
+            }
+        }.resume()
+    }
 }
 
 struct MovieResponse: Codable { let results: [Movie] }
 
+struct VideoResponse: Codable { let results: [VideoResult] }
+
+struct VideoResult: Codable {
+    let key: String
+    let site: String
+    let type: String
+}
+
 struct Movie: Codable, Identifiable {
     let id: Int
     let title: String?
-    let name: String? // للمسلسلات
+    let name: String?
     let overview: String
     let poster_path: String?
     let vote_average: Double
