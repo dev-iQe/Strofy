@@ -7,6 +7,6 @@ targets:
     platform: iOS
     deploymentTarget: "15.0"
     sources:
-      - path: Strofy
+      - path: .
     settings:
       GENERATE_INFOPLIST_FILE: YES
