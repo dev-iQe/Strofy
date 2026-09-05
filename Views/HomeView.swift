@@ -2,24 +2,64 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject var tmdbService = TMDBService()
+    @State private var searchText = ""
+    @State private var isSearching = false
     
     var body: some View {
         NavigationView {
             ZStack {
-                Color(red: 0.95, green: 0.95, blue: 0.95).edgesIgnoringSafeArea(.all) // لون أبيض غامق
+                // الخلفية بالثيم الأخضر الداكن الفاخر
+                Color(red: 0.05, green: 0.18, blue: 0.14)
+                    .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        // الهيدر والبحث
+                        // الهيدر والبحث التفاعلي
                         HStack {
-                            Image(systemName: "flame.fill").font(.title)
-                            Text("Strofy").font(.title2).bold()
+                            Image(systemName: "flame.fill")
+                                .font(.title)
+                                .foregroundColor(Color(red: 0.2, green: 0.85, blue: 0.5))
+                            Text("Strofy")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.white)
                             Spacer()
-                            Image(systemName: "magnifyingglass").font(.title2)
+                            
+                            // زر البحث الذي يفتح خانة الإدخال
+                            Button(action: {
+                                withAnimation(.spring()) {
+                                    isSearching.toggle()
+                                    if !isSearching { searchText = "" }
+                                }
+                            }) {
+                                Image(systemName: isSearching ? "xmark.circle.fill" : "magnifyingglass")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
                         }
                         .padding(.horizontal)
                         
-                        // التصنيفات
+                        // حقل البحث الفعال
+                        if isSearching {
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.white.opacity(0.6))
+                                TextField("ابحث عن فيلم أو مسلسل...", text: $searchText)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                            }
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(15)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .padding(.horizontal)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+                        
+                        // التصنيفات (متناسقة مع الثيم الأخضر)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
                                 CategoryButton(title: "Most Watched", isSelected: true)
@@ -29,11 +69,18 @@ struct HomeView: View {
                             .padding(.horizontal)
                         }
                         
-                        // قسم الأفلام
-                        Text("Movies").font(.headline).padding(.horizontal)
+                        // قسم الأفلام (مع تفعيل الفلترة والبحث الفوري)
+                        Text(searchText.isEmpty ? "Movies" : "نتائج البحث")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal)
+                        
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                ForEach(tmdbService.movies) { movie in
+                                // فلترة الأفلام بناءً على ما يكتبه المستخدم في خانة البحث
+                                ForEach(tmdbService.movies.filter { movie in
+                                    searchText.isEmpty || (movie.title ?? movie.name ?? "").localizedStandardContains(searchText)
+                                }) { movie in
                                     NavigationLink(destination: MovieDetailView(movie: movie)) {
                                         MovieCard(movie: movie)
                                     }
@@ -62,8 +109,9 @@ struct CategoryButton: View {
         Text(title)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(isSelected ? Color.black : Color.gray.opacity(0.2))
-            .foregroundColor(isSelected ? .white : .black)
+            // الثيم الأخضر المضيء للعنصر المحدد، وزجاجي لغير المحدد
+            .background(isSelected ? Color(red: 0.2, green: 0.85, blue: 0.5) : Color.white.opacity(0.1))
+            .foregroundColor(isSelected ? .black : .white)
             .cornerRadius(20)
     }
 }
@@ -72,7 +120,6 @@ struct MovieCard: View {
     let movie: Movie
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // هنا يتم جلب صورة البوستر من API
             AsyncImage(url: URL(string: "https://image.tmdb.org/t/p/w500\(movie.poster_path ?? "")")) { image in
                 image.resizable().aspectRatio(contentMode: .fill)
             } placeholder: {
