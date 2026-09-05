@@ -7,15 +7,21 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(red: 0.95, green: 0.95, blue: 0.95).edgesIgnoringSafeArea(.all) // أبيض غامق
+                // الخلفية بالثيم الأخضر الداكن الخاص بك
+                Color(red: 0.05, green: 0.18, blue: 0.14)
+                    .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // قسم الإعدادات (زجاجي)
+                        // قسم الإعدادات (زجاجي متناسق مع الثيم)
                         VStack(alignment: .trailing, spacing: 15) {
-                            Text("الإعدادات").font(.title2).bold()
+                            Text("الإعدادات")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.white)
                             
                             Toggle("تفعيل الإشعارات", isOn: $notificationsEnabled)
+                                .foregroundColor(.white)
                             
                             Button(action: {}) {
                                 Text("حذف المكتبة المحفوظة")
@@ -29,33 +35,50 @@ struct SettingsView: View {
                         .padding()
                         .background(.ultraThinMaterial)
                         .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
                         
                         // قسم المطور
                         VStack(spacing: 15) {
-                            Text("المطور").font(.title2).bold()
+                            Text("المطور")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.white)
                             
                             Image(systemName: "person.circle.fill")
                                 .resizable()
                                 .frame(width: 100, height: 100)
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color(red: 0.2, green: 0.85, blue: 0.5)) // أخضر مضيء
                             
-                            Text("أنور العزاوي").font(.title).bold()
-                            Text("مطور تطبيقات ومواقع ويب").foregroundColor(.gray)
+                            Text("أنور العزاوي")
+                                .font(.title)
+                                .bold()
+                                .foregroundColor(.white)
+                            
+                            Text("مطور تطبيقات ومواقع ويب")
+                                .foregroundColor(.white.opacity(0.7))
                             
                             HStack(spacing: 25) {
-                                SocialButton(icon: "instagram", user: "eng_azawy", color: .purple)
-                                SocialButton(icon: "snapchat", user: "eng_azawy", color: .yellow)
+                                SocialButton(icon: "camera.fill", user: "eng_azawy", color: .purple) // تم تصحيح اسم أيقونة انستغرام المتوافقة مع SF Symbols
+                                SocialButton(icon: "video.fill", user: "eng_azawy", color: .yellow)
                                 SocialButton(icon: "paperplane.fill", user: "bavarite", color: .blue) // تليجرام
-                                SocialButton(icon: "tiktok", user: "eng_azawy", color: .black)
+                                SocialButton(icon: "globe", user: "eng_azawy", color: .white)
                             }
                         }
                         .padding()
                         .background(.ultraThinMaterial)
                         .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
                     }
                     .padding()
                 }
             }
+            .navigationBarHidden(true) // لإخفاء شريط العنوان الافتراضي ليبقى التصميم نظيفاً
         }
     }
 }
@@ -65,12 +88,13 @@ struct SocialButton: View {
     let user: String
     let color: Color
     var body: some View {
-        VStack {
-            Image(systemName: icon) // يفضل استخدام صور حقيقية في assets
-                .font(.title)
+        VStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.title2)
                 .foregroundColor(color)
             Text("@\(user)")
                 .font(.caption2)
+                .foregroundColor(.white.opacity(0.8))
         }
     }
 }
