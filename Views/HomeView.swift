@@ -67,7 +67,6 @@ struct HomeView: View {
                         if !searchText.isEmpty {
                             MovieSectionRow(title: "نتائج البحث", movies: tmdbService.searchResults)
                         } else {
-                            // الأقسام الثابتة
                             MovieSectionRow(
                                 title: "أفلام",
                                 movies: tmdbService.movies.filter { $0.media_type == "movie" }
@@ -78,7 +77,6 @@ struct HomeView: View {
                                 movies: tmdbService.movies.filter { $0.media_type == "tv" }
                             )
                             
-                            // أقسام حسب التصنيف
                             ForEach(tmdbService.genreSections, id: \.name) { genre in
                                 if let genreMovies = tmdbService.moviesByGenre[genre.name], !genreMovies.isEmpty {
                                     MovieSectionRow(title: genre.name, movies: genreMovies)
@@ -99,7 +97,6 @@ struct HomeView: View {
     }
 }
 
-// قسم واحد (عنوان + سطر أفقي من الكروت)
 struct MovieSectionRow: View {
     let title: String
     let movies: [Movie]
@@ -125,7 +122,6 @@ struct MovieSectionRow: View {
     }
 }
 
-// الكارد بنفس ستايل الصورة التانية
 struct MovieCard: View {
     let movie: Movie
     
