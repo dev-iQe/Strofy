@@ -1,14 +1,13 @@
 import Foundation
 
 class TMDBService: ObservableObject {
-    @Published var movies: [Movie] = []              // من trending (فيه movie + tv مع بعض)
+    @Published var movies: [Movie] = []
     @Published var searchResults: [Movie] = []
     @Published var moviesByGenre: [String: [Movie]] = [:]
     
     let apiKey = "12bae60f08973cb30c741d0844769d9d"
     let baseURL = "https://api.themoviedb.org/3"
     
-    // التصنيفات اللي بدك تعرضها كأقسام
     let genreSections: [(name: String, id: Int)] = [
         ("أكشن", 28),
         ("دراما", 18),
@@ -49,7 +48,6 @@ class TMDBService: ObservableObject {
         }.resume()
     }
     
-    // يجيب أفلام + مسلسلات لتصنيف معين ويخزنهم باسم القسم
     func fetchByGenre(genreId: Int, name: String) {
         guard let movieURL = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&language=ar&with_genres=\(genreId)"),
               let tvURL = URL(string: "\(baseURL)/discover/tv?api_key=\(apiKey)&language=ar&with_genres=\(genreId)") else { return }
@@ -78,11 +76,33 @@ class TMDBService: ObservableObject {
         }
     }
     
-    // يجيب كل الأقسام دفعة وحدة
     func fetchAllSections() {
         fetchTrending()
         for genre in genreSections {
             fetchByGenre(genreId: genre.id, name: genre.name)
         }
+    }
+}
+
+struct MovieResponse: Codable { let results: [Movie] }
+
+struct Movie: Codable, Identifiable {
+    let id: Int
+    let title: String?
+    let name: String? // للمسلسلات
+    let overview: String
+    let poster_path: String?
+    let vote_average: Double
+    let release_date: String?
+    let first_air_date: String?
+    let media_type: String?
+    
+    var year: String {
+        let date = release_date ?? first_air_date ?? ""
+        return date.count >= 4 ? String(date.prefix(4)) : ""
+    }
+    
+    var displayTitle: String {
+        title ?? name ?? "بدون اسم"
     }
 }
